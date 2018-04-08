@@ -2,7 +2,7 @@
 Process_image.py - takes as input 16x16x3 matrix, corresponding to a Macroblock of the image
 Outputs the result of the DCT transformation and Quantization
 Inputs - M, the Macroblock
-		 Q, the image compression quality, used in quanitzation
+	 Q, the image compression quality, used in quanitzation
 Output - B, collection of blocks followign transformation/quantization
 Written by Jonathan Chamberlain - jdchambo@bu.edu
 '''
@@ -69,18 +69,15 @@ Br = numpy.zeros(shape=(8,8))
 # populate B1, B2, B3, B4, Bb, Br with image data
 # data in M stored as RGB, convert to Y'RbRr - use JPEG standard
 
-R = M[:,:,0]
-G = M[:,:,1]
-B = M[:,:,2]
 
 for i in range(0,8):
 	for j in range(0,8):
-		B1[i,j] = (0.299*R[i,j])+(0.587*G[i,j])+(0.114*B[i,j])
-		B2[i,j] = (0.299*R[i,j+8])+(0.587*G[i,j+8])+(0.114*B[i,j+8])
-		B3[i,j] = (0.299*R[i+8,j])+(0.587*G[i+8,j])+(0.114*B[i+8,j])
-		B4[i,j] = (0.299*R[i+8,j+8])+(0.587*G[i+8,j+8])+(0.114*B[i+8,j+8])
-		Bb[i,j] = 128 - (0.168736*R[i,j]) - (0.331264*G[i,j]) + (0.5*B[i,j])
-		Br[i,j] = 128 + (0.5*R[i,j]) - (0.418688*G[i,j])- (0.081312*B[i,j])
+		B1[i,j] = (0.299*M.red[i,j])+(0.587*M.green[i,j])+(0.114*M.blue[i,j])
+		B2[i,j] = (0.299*M.red[i,j+8])+(0.587*M.green[i,j+8])+(0.114*M.blue[i,j+8])
+		B3[i,j] = (0.299*M.red[i+8,j])+(0.587*M.green[i+8,j])+(0.114*M.blue[i+8,j])
+		B4[i,j] = (0.299*M.red[i+8,j+8])+(0.587*M.green[i+8,j+8])+(0.114*M.blue[i+8,j+8])
+		Bb[i,j] = 128 - (0.168736*M.red[i,j]) - (0.331264*M.green[i,j]) + (0.5*M.blue[i,j])
+		Br[i,j] = 128 + (0.5*M.red[i,j]) - (0.418688*M.green[i,j])- (0.081312*M.blue[i,j])
 
 # for each matrix layer, run 2D DCT
 # subsample layers 2,3 by only running 2D DCT on these layers for B1
@@ -125,3 +122,4 @@ for i in range (0,8):
 		
 # define the collection of the 6 processed blocks, and return
 B = [B1, B2, B3, B4, Bb, Br]
+print B1

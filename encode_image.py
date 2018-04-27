@@ -22,15 +22,17 @@ QF = sys.argv[3]
 image = proto_mpeg.Frame(cv2.imread(fimage))
 
 # open output file
+f = open(foutput, "ab")
 
 # starting from top left corner, take each MB and encode
 for vert in range(0,image.v_mblocks):
 	for hor in range(0,image.h_mblocks):
 		MB = image.getBlock(vert, hor)
 		encoded = image.encodeBlock(MB,QF)
-		#write encoded to output file
+		# write encoded to binary file
+		
+		
 		
 
 # close output file
-	
-		
+f.close()

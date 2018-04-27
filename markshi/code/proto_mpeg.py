@@ -14,8 +14,8 @@ quantization_matrix = np.matrix('16 11 10 16 24 40 51 61;'\
                                 '72 92 95 98 112 100 103 99')
 
 # An array of indices that we use to sample a flattened DCT array in zigzag order.
-zz_indices = [ 0,  1,  8, 16,  9,  2,  3, 10,
-               17, 24, 32, 25, 18, 11, 4,  5,
+zz_indices = [  0,  1,  8, 16,  9,  2,  3, 10,
+               17, 24, 32, 25, 18, 11,  4,  5,
                12, 19, 26, 33, 40, 48, 41, 34,
                27, 20, 13,  6,  7, 14, 21, 28,
                35, 42, 49, 56, 57, 50, 43, 36,
@@ -24,14 +24,14 @@ zz_indices = [ 0,  1,  8, 16,  9,  2,  3, 10,
                53, 60, 61, 54, 47, 55, 62, 63]
 
 # An reversed array of zz_indices that we use to regenerate matrix
-reversed_zz_indices = [0, 1, 5, 6, 14,15,27,28,
-                       2, 4, 7, 13,16,26,29,42,
-                       3, 8, 12,17,25,30,41,43,
-                       9, 11,18,24,31,40,44,53,
-                       10,19,23,32,39,45,52,54,
-                       20,22,33,38,46,51,55,60,
-                       21,34,37,47,50,56,59,61,
-                       35,36,48,49,57,58,62,63]
+reversed_zz_indices = [ 0,  1,  5,  6, 14, 15, 27, 28,
+                        2,  4,  7, 13, 16, 26, 29, 42,
+                        3,  8, 12, 17, 25, 30, 41, 43,
+                        9, 11, 18, 24, 31, 40, 44, 53,
+                       10, 19, 23, 32, 39, 45, 52, 54,
+                       20, 22, 33, 38, 46, 51, 55, 60,
+                       21, 34, 37, 47, 50, 56, 59, 61,
+                       35, 36, 48, 49, 57, 58, 62, 63]
 
 
 
@@ -227,67 +227,3 @@ class Frame:
         regenerated_block = cv2.merge((regenerated_Y, regenerate_Cb, regenerate_Cr)).astype(np.uint8)
         regenerated_block = cv2.cvtColor(regenerated_block,cv2.COLOR_YCR_CB2RGB)
         return regenerated_block
-
-
-def compare_block(m,n,QF):
-    tmp = pic.getBlock(m,n)
-    #print(tmp.shape)
-    tmp1 = pic.encode_block(tmp,QF)
-    tmp2 = pic.decode_block(tmp1,QF)
-    
-    plt.figure(figsize=(6,2))
-    plt.subplot(121)
-    plt.title('Regenerated block QF={}'.format(QF))
-    plt.imshow(tmp2)
-    plt.subplot(122)
-    plt.title('Original block')
-    plt.imshow(tmp)
-    plt.show()
-
-
-# Compare encoded and then decoded block with the original block, using different QF ranging from 0.1-1.5
-img_name = 'night.jpg'
-fullPic = plt.imread(img_name)
-print(fullPic.shape)
-#fullPic = plt.imread(img_name)[:224,:224]
-pic = Frame(fullPic)
-plt.imshow(fullPic)
-for i in np.arange(1,16,2)/10:
-    #print(i)
-    compare_block(20,30,i)
-
-
-
-def compare_pics(pic, QF):
-    blocks = []
-    for m in range(pic.v_mblocks):
-        for n in range(pic.h_mblocks):
-            block = pic.getBlock(m,n)
-            encoded_block = pic.encode_block(block,QF)
-            decoded_block = pic.decode_block(encoded_block,QF)
-            blocks.append(decoded_block)
-    f=[]
-    for m in range(pic.v_mblocks):
-        rst = []
-        for i in range(16):
-            for n in range(pic.h_mblocks):
-                block = blocks[m*pic.h_mblocks+n]
-                rst+=list(block[i])
-        #print(len(rst))
-        f+=rst
-    #print(len(f))
-    f = np.array(f).reshape(pic.v_mblocks*16,pic.h_mblocks*16,3)
-    
-    plt.figure(figsize=(15,8))
-    plt.subplot(121)
-    plt.title('Regenerated picture QF={}'.format(QF))
-    plt.imshow(f)
-    plt.subplot(122)
-    plt.title('Original picture')
-    plt.imshow(pic.getFrame())
-    plt.show()
-
-
-# Compare encoded and then decoded full picture with the original picture, using different QF ranging from 0.1-1.5
-for QF in np.arange(1,16,2)/10:
-    compare_pics(pic,QF)

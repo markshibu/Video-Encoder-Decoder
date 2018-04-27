@@ -9,7 +9,8 @@ Written by Jonathan Chamberlain - jdchambo@bu.edu
 import argparse
 import sys
 from os import listdir
-import encode_image
+import proto_mpeg
+import cv2
 
 def main():
 	
@@ -49,10 +50,22 @@ def main():
 		except NotADirectoryError:
 			fin = args.input
 	
-	# call video encoder on inputs
-	for image in fin:
-		encode_image(image,fout,args.qf[0])
+	# open output file
+	f = open(fout, "ab")
 	
+	# call video encoder on inputs
+	for imfile in fin:
+		image = proto_mpeg.Frame(cv2.imread(imfile))
+		# starting from top left corner, take each MB and encode
+		for vert in range(0,image.v_mblocks):
+			for hor in range(0,image.h_mblocks):
+				MB = image.getBlock(vert, hor)
+				encoded = image.encodeBlock(MB,QF)
+				#  write encoded to binary file
+				
+	
+	# close output file
+	f.close()
 	
 if __name__ == "__main__":
 	main()

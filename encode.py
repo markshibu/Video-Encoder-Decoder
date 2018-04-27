@@ -9,6 +9,7 @@ Written by Jonathan Chamberlain - jdchambo@bu.edu
 import argparse
 import sys
 from os import listdir
+#import encode_image
 
 def main():
 	
@@ -48,7 +49,11 @@ def main():
 		except NotADirectoryError:
 			fin = args.input
 	
-	# call video encoder
+	# call video encoder on inputs
+	
+	# encode_image.py goes here
+	
+	
 	
 if __name__ == "__main__":
 	main()

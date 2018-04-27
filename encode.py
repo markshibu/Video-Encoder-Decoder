@@ -53,6 +53,7 @@ def main():
 	# open output file
 	f = open(fout, "ab")
 	
+	print("Encoding...")
 	# call video encoder on inputs
 	for imfile in fin:
 		# need file and/or image headers?
@@ -64,6 +65,7 @@ def main():
 				encoded = image.encodeBlock(MB,QF) #output of this should be binary stream once Huffman Encoding implemented
 				#  write encoded to binary file
 				f.write(encoded)
+	print("Encoding Complete")
 	# close output file
 	f.close()
 	

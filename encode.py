@@ -55,15 +55,15 @@ def main():
 	
 	# call video encoder on inputs
 	for imfile in fin:
+		# need file and/or image headers?
 		image = proto_mpeg.Frame(cv2.imread(imfile))
 		# starting from top left corner, take each MB and encode
 		for vert in range(0,image.v_mblocks):
 			for hor in range(0,image.h_mblocks):
 				MB = image.getBlock(vert, hor)
-				encoded = image.encodeBlock(MB,QF)
+				encoded = image.encodeBlock(MB,QF) #output of this should be binary stream once Huffman Encoding implemented
 				#  write encoded to binary file
-				
-	
+				f.write(encoded)
 	# close output file
 	f.close()
 	

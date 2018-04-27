@@ -9,7 +9,7 @@ Written by Jonathan Chamberlain - jdchambo@bu.edu
 import argparse
 import sys
 from os import listdir
-#import encode_image
+import encode_image
 
 def main():
 	
@@ -50,9 +50,8 @@ def main():
 			fin = args.input
 	
 	# call video encoder on inputs
-	
-	# encode_image.py goes here
-	
+	for image in fin:
+		encode_image(image,fout,args.qf[0])
 	
 	
 if __name__ == "__main__":

@@ -10,9 +10,10 @@ import math
 main = Tk()
 main.geometry('750x500')
 progBarVal = DoubleVar()
+QFValue = 0.1;
 
 
-""" A Tkinter listbox with drag'n'drop reordering of entries. """
+#List Box that Implements Reorder by Dragging
 class myListbox(tkinter.Listbox):
     def __init__(self, master, **kw):
         kw['selectmode'] = tkinter.SINGLE
@@ -37,9 +38,9 @@ class myListbox(tkinter.Listbox):
             self.insert(i-1, x)
             self.curIndex = i
 
-################
-#   FUNCTIONS
-################
+##############
+#   METHODS
+##############
 def add():
 	main.files = filedialog.askopenfiles(mode = 'rb', title = 'Select Images for Encoding')
 	for file in main.files:
@@ -54,6 +55,9 @@ def remove():
 def clear():
 	FileList.delete(0,END)
 
+def updateQF(value):
+	global QFValue
+	QFValue = value
 
 def encoding():
 	global QFValue
@@ -85,11 +89,12 @@ def encoding():
 		time.sleep(0.25)
 
 	totaltime = time.time() - start
+
 	#Renable Encoding and Decoding
 	encodeButton.configure(state=tkinter.ACTIVE)
 	decodeButton.configure(state=tkinter.ACTIVE)
 
-	message = "Encoded "+str(numFiles)+" files in "+str(round(totaltime,3))+" seconds"
+	message = "Encoded "+str(numFiles)+" files with QF Value of "+str(QFValue) +" in "+str(round(totaltime,3))+" seconds"
 	messagebox.showinfo("Encoding Complete", message)
 
 
@@ -112,6 +117,7 @@ quitFrame = Frame(master = main)
 encodeDecodeFrame = Frame(master = main)
 outputFrame = Frame(master = main)
 progressFrame = Frame(master = main)
+qualityFrame = Frame(master = main)
 
 
 ###############
@@ -132,6 +138,12 @@ addFileButton.pack(side = TOP)
 removeFileButton.pack(side = TOP, pady = 3)
 clearAllButton.pack(side = TOP)
 
+#QUALITY FACTOR FRAME
+qualityLabel = Label(qualityFrame,justify='left', text = 'Quality Factor: ')
+qualityFactor = Scale(qualityFrame, variable = QFValue, orient = "horizontal", length = 250,\
+		from_ = 0.1, to = 1.5, resolution = 0.1, command = updateQF)
+qualityLabel.pack(side = LEFT)
+qualityFactor.pack(side = LEFT)
 
 #OUTPUT FRAME
 outputLabel = Label(outputFrame, justify='left', text='Output File Name:')
@@ -167,6 +179,7 @@ fileFrame.pack(side = TOP, pady = 5)
 FileList.pack(side = LEFT)
 fileButtonFrame.pack(side = RIGHT)
 
+qualityFrame.pack(side = TOP, pady = 5)
 outputFrame.pack(side = TOP, pady = 5)
 encodeDecodeFrame.pack(side = TOP)
 progressFrame.pack(side = TOP, pady = 5)

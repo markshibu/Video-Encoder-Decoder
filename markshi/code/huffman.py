@@ -41,16 +41,24 @@ def make_encoder_table():
     """
     codes = read_raw_VLC()
 
+    def get_rid_of_prefix_0(s):
+        while s[0]=='0':
+            #print(1)
+            s=s[1:]
+        return s
+
     # Add all VLCs to the table
     encoder_table = dict()
     for code in codes:
         x = code.split(',')
         key = tuple(map(int,(x[0], x[1])))
-        print(x[2])
-        bits = Bits('0b' + x[2])
+        s = get_rid_of_prefix_0(x[2])
+        #print(x[2],s,type(x[2]))
+        bits = Bits('0b' + s)
         encoder_table[key] = bits
 
     # Add special codes to the table
+    encoder_table['EOM'] = Bits('0b001')
     encoder_table['EOB'] = Bits('0b10')
     encoder_table['ESC'] = Bits('0b000001')
 

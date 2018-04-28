@@ -1,11 +1,11 @@
 import argparse
-from os import listdir, path
 import sys
 import numpy as np
 import proto_mpeg
 import encode
 import decode
 import matplotlib.pyplot as plt
+import os
 
 #Only for test
 def compare_block(pic,m,n,QF):
@@ -53,24 +53,44 @@ def compare_pics(pic, QF):
     plt.imshow(pic.getFrame())
     plt.show()
 
-def main():
-    #img_name = 'night.jpg'
-    #fullPic = plt.imread(img_name)
-    QF=0.5
+def compare_compress_rate(pic):
     img_name = 'baboon.jpg'
     fullPic = plt.imread(img_name)[:32,:64]
     pic = proto_mpeg.Frame(fullPic)
+
+    statinfo = os.stat('baboon.jpg')
+    ori_size = statinfo.st_size
+
+    QF=0.1
+    for QF in [0.1,0.3,0.5,0.7,0.9,1.1,1.3,1.5]:
+    
+        encoded_dre = encode.encode_pic_to_dre(pic,QF) # dre refers to DC_term,Run_level,EOB
+        bits = encode.dre_to_bit(encoded_dre)
+        
+        print('QF = ',QF,', original size = ',ori_size, ', bitstream length = ',len(bits))
+
+def main():
+    #img_name = 'night.jpg'
+    #fullPic = plt.imread(img_name)
+    #img_name = 'baboon.jpg'
+    fullPic = plt.imread('./pics/baboon.jpg')[:32,:64]
+    pic = proto_mpeg.Frame(fullPic)
+
+    # Encode
+    QF=0.1
     encoded_dre = encode.encode_pic_to_dre(pic,QF) # dre refers to DC_term,Run_level,EOB
-    encode.dre_to_bit(encoded_dre)
+    bits = encode.dre_to_bit(encoded_dre)
+
+    # Decode
     #print(len(encoded_dre))
     #decoded = decode.decode_pic_from_dre(pic,encoded_dre,QF)
     #plt.imshow(decoded)
     #plt.show()
 
-    # Compare encoded and then decoded block with the original block, using different QF ranging from 0.1-1.5
-    #for QF in [0.1,0.3,0.5,0.7,1,1.2,1.5]:compare_block(pic,0,0,QF)
-    # Compare encoded and then decoded full picture with the original picture, using different QF ranging from 0.1-1.5
-    #for QF in [0.1,0.3,0.5,0.7,1,1.2,1.5]:compare_pics(pic,QF)
+    # Compare
+    #compare_compress_rate(pic)
+    #for QF in [0.1,0.3,0.5,0.7,0.9,1.1,1.3,1.5]: compare_block(pic,0,0,QF)
+    #for QF in [0.1,0.3,0.5,0.7,0.9,1.1,1.3,1.5]: compare_pics(pic,QF)
 
     """
     parser = argparse.ArgumentParser(description='EC504 proto-mpeg encoder for jpeg images')
@@ -98,7 +118,7 @@ def main():
     else:
         # try to read directory at input[0]. If this fails, assume we have a list of one or more files.
         try:
-            filenames = sorted(listdir(args.input[0]))
+            filenames = sorted(os.listdir(args.input[0]))
             # Listdir will work without a trailing '/', but the code that follows won't. Append it if it is missing.
             if args.input[0][-1] != '/':
                 args.input[0] = args.input[0] + '/'
@@ -131,10 +151,10 @@ def main():
     # Calculate original file size
     original_size_B = 0
     for file in files:
-        original_size_B += path.getsize(file)
+        original_size_B += os.path.getsize(file)
 
     #Calculate compressed file size
-    compressed_size = path.getsize(outname)
+    compressed_size = os.path.getsize(outname)
 
     print("Sum of input image sizes:", '%.2f' % (original_size_B/1e6), 'MB')
     print("Compressed video size:", '%.2f' % (compressed_size/1e6), 'MB')

@@ -107,29 +107,58 @@ def encode_pic_to_dre(pic,QF):
 
 from bitstring import BitArray, BitStream, Bits, ReadError
 def dre_to_bit(blocks):
-    table = make_encoder_table()
-    print(BitArray('0b001')==BitArray('0b1'))
-    print(table)
-    print(len(blocks))
-    block = blocks[0]
-    print(block)
-    print(len(block))
-    for mblock_88 in block:
-        print(mblock_88[0],bin(mblock_88[0]))
-        encoded_bits = BitArray(bin(mblock_88[0]))
-        print(encoded_bits)
-        for j in range(1,len(mblock_88)-1):
-            run_level_positive = tuple(map(abs, mblock_88[j]))
-            to_append = table[run_level_positive]
-            print(mblock_88[j],run_level_positive,to_append)
-            encoded_bits.append(to_append)
-            print(mblock_88[j][1])
-            if mblock_88[j][1]<0:
-                encoded_bits.append('0b1')
-            else:
-                encoded_bits.append('0b0')
-        print(encoded_bits)
+    encoder_table = make_encoder_table()
+    #print(BitArray('0b001')==BitArray('0b1')) # >>>False
+    #print(table)
+    #print(len(blocks))
+    def translate_block(block):
+        #print(len(block),block)
+        rst = BitArray();
+        for mblock_88 in block:
+            #print(mblock_88[0],bin(mblock_88[0]))
 
+            # Encode the DC term into a BitArray
+            encoded_bits = BitArray(bin(mblock_88[0]))
+            #print(encoded_bits)
+
+            # Encode the AC terms
+            for j in range(1,len(mblock_88)-1):
+                # Note only positive levels are stored in encoder table.
+                run_level = mblock_88[j]
+                run_level_positive = tuple(map(abs, run_level))
+                if run_level_positive in encoder_table:
+                    to_append = encoder_table[run_level_positive]
+                    #print(mblock_88[j],run_level_positive,to_append)
+                    encoded_bits.append(to_append)
+                    #print(mblock_88[j][1])
+                    # Check to see if the level is negative, write appropriate sign bit.
+                    if mblock_88[j][1]<0:
+                        encoded_bits.append('0b1')
+                    else:
+                        encoded_bits.append('0b0')
+                else:
+                    # The run_level combo was not fond in the encoder table. We will do the following:
+                    # i) encode an escape character
+                    # ii) encode a 6-bit unsigned integer for the run, which is at most 62
+                    # iii) encode a 16-bit signed integer for the level
+                    encoded_bits.append(encoder_table['ESC'])
+                    run = 'uint:6=' + str(run_level[0])
+                    level = 'int:16=' + str(run_level[1])
+                    encoded_bits.append(run)
+                    encoded_bits.append(level)
+                    #print("else not exist")
+            encoded_bits.append(encoder_table['EOM'])
+            #print(encoded_bits)
+            rst.append(encoded_bits)
+        rst.append(encoder_table['EOB'])
+        return rst
+
+    rst = BitArray();
+    for block in blocks:
+        translated_block = translate_block(block)
+        #print(translated_block)
+        rst.append(translated_block)
+    return rst
 
 def zigzag_to_bits(self, encoder_table, zz):
 

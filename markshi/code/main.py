@@ -1,15 +1,18 @@
 import argparse
 from os import listdir, path
 import sys
-import proto_mpeg
-import matplotlib.pyplot as plt
 import numpy as np
+import proto_mpeg
+import encode
+import decode
+import matplotlib.pyplot as plt
 
-def compare_block(pic, m,n,QF):
+#Only for test
+def compare_block(pic,m,n,QF):
     tmp = pic.getBlock(m,n)
     #print(tmp.shape)
-    tmp1 = pic.encode_block(tmp,QF)
-    tmp2 = pic.decode_block(tmp1,QF)
+    tmp1 = encode.encode_block(tmp,QF)
+    tmp2 = decode.decode_block(tmp1,QF)
     
     plt.figure(figsize=(6,2))
     plt.subplot(121)
@@ -20,15 +23,14 @@ def compare_block(pic, m,n,QF):
     plt.imshow(tmp)
     plt.show()
 
-
-
+#Only for test
 def compare_pics(pic, QF):
     blocks = []
     for m in range(pic.v_mblocks):
         for n in range(pic.h_mblocks):
             block = pic.getBlock(m,n)
-            encoded_block = pic.encode_block(block,QF)
-            decoded_block = pic.decode_block(encoded_block,QF)
+            encoded_block = encode.encode_block(block,QF)
+            decoded_block = decode.decode_block(encoded_block,QF)
             blocks.append(decoded_block)
     f=[]
     for m in range(pic.v_mblocks):
@@ -51,24 +53,24 @@ def compare_pics(pic, QF):
     plt.imshow(pic.getFrame())
     plt.show()
 
-
-
 def main():
     #img_name = 'night.jpg'
     #fullPic = plt.imread(img_name)
+    QF=0.5
     img_name = 'baboon.jpg'
-    fullPic = plt.imread(img_name)[:224,:224]
+    fullPic = plt.imread(img_name)[:32,:64]
     pic = proto_mpeg.Frame(fullPic)
-    #plt.imshow(fullPic)
-    # Compare encoded and then decoded block with the original block, 
-    # using different QF ranging from 0.1-1.5
-    for i in np.arange(1,16,5)/10:
-        compare_block(pic,0,0,i)
+    encoded_dre = encode.encode_pic_to_dre(pic,QF) # dre refers to DC_term,Run_level,EOB
+    encode.dre_to_bit(encoded_dre)
+    #print(len(encoded_dre))
+    #decoded = decode.decode_pic_from_dre(pic,encoded_dre,QF)
+    #plt.imshow(decoded)
+    #plt.show()
 
-
+    # Compare encoded and then decoded block with the original block, using different QF ranging from 0.1-1.5
+    #for QF in [0.1,0.3,0.5,0.7,1,1.2,1.5]:compare_block(pic,0,0,QF)
     # Compare encoded and then decoded full picture with the original picture, using different QF ranging from 0.1-1.5
-    for QF in np.arange(1,16,5)/10:
-        compare_pics(pic,QF)
+    #for QF in [0.1,0.3,0.5,0.7,1,1.2,1.5]:compare_pics(pic,QF)
 
     """
     parser = argparse.ArgumentParser(description='EC504 proto-mpeg encoder for jpeg images')

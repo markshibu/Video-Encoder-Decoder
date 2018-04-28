@@ -9,6 +9,8 @@ Written by Jonathan Chamberlain - jdchambo@bu.edu
 import argparse
 import sys
 from os import listdir
+import proto_mpeg
+import cv2
 
 def main():
 	
@@ -48,7 +50,24 @@ def main():
 		except NotADirectoryError:
 			fin = args.input
 	
-	# call video encoder
+	# open output file
+	f = open(fout, "ab")
+	
+	print("Encoding...")
+	# call video encoder on inputs
+	for imfile in fin:
+		# need file and/or image headers?
+		image = proto_mpeg.Frame(cv2.imread(imfile))
+		# starting from top left corner, take each MB and encode
+		for vert in range(0,image.v_mblocks):
+			for hor in range(0,image.h_mblocks):
+				MB = image.getBlock(vert, hor)
+				encoded = image.encodeBlock(MB,QF) #output of this should be binary stream once Huffman Encoding implemented
+				#  write encoded to binary file
+				f.write(encoded)
+	print("Encoding Complete")
+	# close output file
+	f.close()
 	
 if __name__ == "__main__":
 	main()

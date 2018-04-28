@@ -1,44 +1,105 @@
+import tkinter
 from tkinter import *
 from tkinter import ttk
+from tkinter import filedialog
+from tkinter import messagebox
+
 import time
+import math
 
 main = Tk()
-main.geometry('500x500')
-progBarVal = 0
+main.geometry('750x500')
+progBarVal = DoubleVar()
 
-class myListbox(Listbox):
-	def __init__(self, frame, **kwargs):
-		kwargs['selectmode'] = tkinter.SINGLE
-		self.currIndex = None
+
+""" A Tkinter listbox with drag'n'drop reordering of entries. """
+class myListbox(tkinter.Listbox):
+    def __init__(self, master, **kw):
+        kw['selectmode'] = tkinter.SINGLE
+        tkinter.Listbox.__init__(self, master, kw)
+        self.bind('<Button-1>', self.setCurrent)
+        self.bind('<B1-Motion>', self.shiftSelection)
+        self.curIndex = None
+
+    def setCurrent(self, event):
+        self.curIndex = self.nearest(event.y)
+
+    def shiftSelection(self, event):
+        i = self.nearest(event.y)
+        if i < self.curIndex:
+            x = self.get(i)
+            self.delete(i)
+            self.insert(i+1, x)
+            self.curIndex = i
+        elif i > self.curIndex:
+            x = self.get(i)
+            self.delete(i)
+            self.insert(i-1, x)
+            self.curIndex = i
 
 ################
 #   FUNCTIONS
 ################
 def add():
-	FileList.insert(END,1)
-	#print("insert")
+	main.files = filedialog.askopenfiles(mode = 'rb', title = 'Select Images for Encoding')
+	for file in main.files:
+		FileList.insert(END,file.name)
 
 def remove():
 	file = FileList.curselection()
 	if file != ():
 		fileIndex = int(file[0])
-		FileList.delete(fileIndex,fileIndex)
-		#print("remove at ",fileIndex)
+		FileList.delete(fileIndex)
 
 def clear():
 	FileList.delete(0,END)
 
 
-#NEED TO IMPLEMENT ENCODING AND DECODING FUNCTIONS
 def encoding():
+	global QFValue
+	global progBarVal
+
+	i = 0
+	progBarVal.set(0)
+
+	files = FileList.get(0,END)
+	numFiles = len(files)
+	if numFiles == 0:
+		messagebox.showinfo("Error", "No Files Selected")
+		return
+
+	#Disable Encoding and Decoding when one is active
+	encodeButton.configure(state=tkinter.DISABLED)
+	decodeButton.configure(state=tkinter.DISABLED)
+
+	start = time.time()
 	fileName = outputFile.get()
 	if fileName == "":
 		fileName = "output.bin"
 	print(fileName)
-	
 
-def decoding(): 
-	print("IM DECODING")
+	for file in files:
+		i+= 1
+		progBarVal.set(i/numFiles * 100)
+		main.update()
+		time.sleep(0.25)
+
+	totaltime = time.time() - start
+	#Renable Encoding and Decoding
+	encodeButton.configure(state=tkinter.ACTIVE)
+	decodeButton.configure(state=tkinter.ACTIVE)
+
+	message = "Encoded "+str(numFiles)+" files in "+str(round(totaltime,3))+" seconds"
+	messagebox.showinfo("Encoding Complete", message)
+
+
+def decoding():
+	global progBarVal
+	main.decodefile = filedialog.askopenfile(mode = 'rb', title = "Choose a File to Decode")
+	start = time.time()
+	print(main.decodefile.name)
+	totaltime = time.time() - start
+
 
 
 ###############
@@ -58,21 +119,21 @@ progressFrame = Frame(master = main)
 ###############
 
 #LIST BOX
-FileList = Listbox(fileFrame,width = 50, height = 15)
-
+FileList = myListbox(fileFrame, width = 80, height = 15)#selectmode = SINGLE,
 
 #ADD/REMOVE FILE BUTTONS
-
-addFileButton = Button(fileButtonFrame,text="Add File", command = add)
+fileLabel = Label(fileFrame,justify='left', text ='Selected Files For Encoding')
+addFileButton = Button(fileButtonFrame,text="Add File(s)", command = add)
 removeFileButton = Button(fileButtonFrame, text = "Remove File", command = remove)
 clearAllButton = Button(fileButtonFrame, text = "Clear All", command = clear)
 
+fileLabel.pack(side = TOP)
 addFileButton.pack(side = TOP)
-removeFileButton.pack(side = TOP)
+removeFileButton.pack(side = TOP, pady = 3)
 clearAllButton.pack(side = TOP)
 
 
-#OUTPUT ENTRY
+#OUTPUT FRAME
 outputLabel = Label(outputFrame, justify='left', text='Output File Name:')
 outputFile = Entry(outputFrame, width = 40)
 outputFile.delete(0,END)
@@ -84,10 +145,10 @@ outputFile.pack(side = LEFT)
 encodeButton = Button(encodeDecodeFrame,text="Encode Files", command = encoding)
 decodeButton = Button(encodeDecodeFrame, text="Decode File", command = decoding)
 
-decodeButton.pack(side = RIGHT)
-encodeButton.pack(side = RIGHT)
+decodeButton.pack(side = RIGHT,padx = 10)
+encodeButton.pack(side = RIGHT,padx = 10)
 
-#PROGRESS BAR
+#PROGRESS BAR FRAME
 progBarLabel = Label(progressFrame, justify='left', text='Progress')
 progBar = ttk.Progressbar(progressFrame, orient = "horizontal", length = 400, mode = "determinate",\
 		maximum = 100, value = 0, variable = progBarVal)

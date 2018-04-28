@@ -18,7 +18,7 @@ def main():
 	
 	parsed = argparse.ArgumentParser(description='Video encoder for jpeg images')
 	parsed.add_argument('-output', nargs=1, default=['out.bin'], help='filename of encoded file - default is out.bin')
-	parsed.add_argument('-qf', nargs=1, choices=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5], default=[0.8], help='quantization factor for high frquency supression. Default is 0.8')
+	parsed.add_argument('-qf', nargs=1, choices=range(0.1,1.5,0.1), default=[0.8], help='quantization factor for high frquency supression. Default is 0.8')
 	parsed.add_argument('input', nargs=argparse.REMAINDER, help='Specify either a space delimited list of files, or a single directory')
 	
 	args = parsed.parse_args()
@@ -53,10 +53,11 @@ def main():
 	# open output file
 	f = open(fout, "ab")
 	
+	# encode file header 
+	
 	print("Encoding...")
 	# call video encoder on inputs
 	for imfile in fin:
-		# need file and/or image headers?
 		image = proto_mpeg.Frame(cv2.imread(imfile))
 		# starting from top left corner, take each MB and encode
 		for vert in range(0,image.v_mblocks):

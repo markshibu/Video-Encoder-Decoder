@@ -11,6 +11,7 @@ import sys
 from os import listdir
 import proto_mpeg
 import cv2
+import struct
 
 def main():
 	
@@ -18,7 +19,7 @@ def main():
 	
 	parsed = argparse.ArgumentParser(description='Video encoder for jpeg images')
 	parsed.add_argument('-output', nargs=1, default=['out.bin'], help='filename of encoded file - default is out.bin')
-	parsed.add_argument('-qf', nargs=1, choices=range(0.1,1.5,0.1), default=[0.8], help='quantization factor for high frquency supression. Default is 0.8')
+	parsed.add_argument('-qf', nargs=1, choices=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5], default=[0.8], help='quantization factor for high frquency supression. Default is 0.8')
 	parsed.add_argument('input', nargs=argparse.REMAINDER, help='Specify either a space delimited list of files, or a single directory')
 	
 	args = parsed.parse_args()
@@ -51,21 +52,27 @@ def main():
 			fin = args.input
 	
 	# open output file
-	f = open(fout, "ab")
+	f = open(fout, "wb")
 	
-	# encode file header 
+	# encode file header (number of images
+	header = struct.pack(">I", len(fin))
+	f.write(header)
 	
 	print("Encoding...")
 	# call video encoder on inputs
 	for imfile in fin:
 		image = proto_mpeg.Frame(cv2.imread(imfile))
 		# starting from top left corner, take each MB and encode
+		# will need to update to account for frame matching
 		for vert in range(0,image.v_mblocks):
 			for hor in range(0,image.h_mblocks):
 				MB = image.getBlock(vert, hor)
 				encoded = image.encodeBlock(MB,QF) #output of this should be binary stream once Huffman Encoding implemented
 				#  write encoded to binary file
 				f.write(encoded)
+	
+	# encode EOF footer
+	
 	print("Encoding Complete")
 	# close output file
 	f.close()

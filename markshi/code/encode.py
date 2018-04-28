@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import scipy.fftpack as fft
 from proto_mpeg import quantization_matrix,zz_indices,reversed_zz_indices
+from huffman import EOF,make_encoder_table
 def encode_block(src,QF):
     """
     @param src: A 16*16*3 block
@@ -54,7 +55,7 @@ def encode_block(src,QF):
             a = prefix_0(tmp)
             if a==len(tmp):
                 break
-            encoded_string.append([a,tmp[a]])
+            encoded_string.append((a,tmp[a]))
             tmp = tmp[a+1:]
         return encoded_string
 
@@ -106,16 +107,28 @@ def encode_pic_to_dre(pic,QF):
 
 from bitstring import BitArray, BitStream, Bits, ReadError
 def dre_to_bit(blocks):
+    table = make_encoder_table()
+    print(BitArray('0b001')==BitArray('0b1'))
+    print(table)
     print(len(blocks))
     block = blocks[0]
     print(block)
     print(len(block))
-    Y1=block[0]
-    print(Y1[0])
-    for i in range(1,len(Y1)):
-        print(Y1[i])
-    encoded_bits = BitArray(block[0][0])
-    print(encoded_bits)
+    for mblock_88 in block:
+        print(mblock_88[0],bin(mblock_88[0]))
+        encoded_bits = BitArray(bin(mblock_88[0]))
+        print(encoded_bits)
+        for j in range(1,len(mblock_88)-1):
+            run_level_positive = tuple(map(abs, mblock_88[j]))
+            to_append = table[run_level_positive]
+            print(mblock_88[j],run_level_positive,to_append)
+            encoded_bits.append(to_append)
+            print(mblock_88[j][1])
+            if mblock_88[j][1]<0:
+                encoded_bits.append('0b1')
+            else:
+                encoded_bits.append('0b0')
+        print(encoded_bits)
 
 
 def zigzag_to_bits(self, encoder_table, zz):

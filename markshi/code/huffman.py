@@ -1,144 +1,98 @@
-import argparse
-from os import listdir, path
-import sys
-import numpy as np
-import proto_mpeg
-import encode
-import decode
-import matplotlib.pyplot as plt
+from bitstring import Bits
 
-#Only for test
-def compare_block(pic,m,n,QF):
-    tmp = pic.getBlock(m,n)
-    #print(tmp.shape)
-    tmp1 = encode.encode_block(tmp,QF)
-    tmp2 = decode.decode_block(tmp1,QF)
-    
-    plt.figure(figsize=(6,2))
-    plt.subplot(121)
-    plt.title('Regenerated block QF={}'.format(QF))
-    plt.imshow(tmp2)
-    plt.subplot(122)
-    plt.title('Original block')
-    plt.imshow(tmp)
-    plt.show()
+'''
+Special codes
+These codes are guaranteed not to collide with encoded image data. They are construted using 4.5 bytes of zeros followed
+by a 4-bit code.
+Why? The longest string of zeros we can encounter in a standard huffman code is 11. Furthermore, an escaped (run, level)
+encoding might have 22 zeros. So we want to handle the case where we encode 22 + 11 = 33 zeros. In practice, we need
+fewer zeros, but cutting down would afford little benefit.
+'''
 
-#Only for test
-def compare_pics(pic, QF):
-    blocks = []
-    for m in range(pic.v_mblocks):
-        for n in range(pic.h_mblocks):
-            block = pic.getBlock(m,n)
-            encoded_block = encode.encode_block(block,QF)
-            decoded_block = decode.decode_block(encoded_block,QF)
-            blocks.append(decoded_block)
-    f=[]
-    for m in range(pic.v_mblocks):
-        rst = []
-        for i in range(16):
-            for n in range(pic.h_mblocks):
-                block = blocks[m*pic.h_mblocks+n]
-                rst+=list(block[i])
-        #print(len(rst))
-        f+=rst
-    #print(len(f))
-    f = np.array(f).reshape(pic.v_mblocks*16,pic.h_mblocks*16,3)
-    
-    plt.figure(figsize=(15,8))
-    plt.subplot(121)
-    plt.title('Regenerated picture QF={}'.format(QF))
-    plt.imshow(f)
-    plt.subplot(122)
-    plt.title('Original picture')
-    plt.imshow(pic.getFrame())
-    plt.show()
+EOF = '00000000 00000000 00000000 00000000 0000 0001'.replace(' ', '')
+
+'''
+End special codes
+'''
+
+def read_raw_VLC():
+    """
+    Read raw huffman codes from our text file
+    This is a CSV file with the format: run, level, VLC, #bits \n
+    :return: list of codes, one set of VLC data per entry
+    """
+    try:
+        with open('mpeg_huffman_codes.csv') as f:
+            codes = f.read().split('\n')[1:-1]
+    except:
+        raise Exception("Missing required file mpeg_huffman_codes.csv.")
+
+    return codes
+
+# TODO: We might try making encoder tables incorporate the sign bit, to eliminate the need to test the polarity of the level during encoding. This would mean we make two entries like (1,2) and (1,-2) that map to the same binary code.
+
+def make_encoder_table():
+    """
+    Make a dictionary. (O(1) lookups)
+    Keys: tuple with (run, level)
+    Data: Bits object with VLC
+    :return: encoder table that can be used to quickly find a VLC given a run, level entry.
+    NOTE: The sign bit must be appended to each VLC when encoding (except for EOB and ESC).
+    """
+    codes = read_raw_VLC()
+
+    # Add all VLCs to the table
+    encoder_table = dict()
+    for code in codes:
+        x = code.split(',')
+        key = tuple(map(int,(x[0], x[1])))
+        print(x[2])
+        bits = Bits('0b' + x[2])
+        encoder_table[key] = bits
+
+    # Add special codes to the table
+    encoder_table['EOB'] = Bits('0b10')
+    encoder_table['ESC'] = Bits('0b000001')
+
+    # Return the table
+    return encoder_table
+
+def make_decoder_table():
+    """
+    Again, we will use a dictionary so we have O(1) lookups
+    Keys: Bits object with VLC
+    Data: tuple with (run, level)
+    :return: decoder dictionary. The idea is to perform successive lookups on a string of bits until we get a match.
+    """
+    codes = read_raw_VLC()
+
+    decoder_table = dict()
+    for code in codes:
+        x = code.split(',')
+        key = Bits('0b' + x[2])
+        run_level = tuple(map(int, (x[0], x[1])))
+        decoder_table[key] = run_level
+
+    # Add special codes to the table
+    decoder_table[Bits('0b10')] = 'EOB'
+    decoder_table[Bits('0b000001')] = 'ESC'
+
+    return decoder_table
 
 def main():
-    #img_name = 'night.jpg'
-    #fullPic = plt.imread(img_name)
-    QF=0.5
-    img_name = 'baboon.jpg'
-    fullPic = plt.imread(img_name)[:32,:64]
-    pic = proto_mpeg.Frame(fullPic)
-    encoded_dre = encode.encode_pic_to_dre(pic,QF) # dre refers to DC_term,Run_level,EOB
-    encode.dre_to_bit(encoded_dre)
-    #print(len(encoded_dre))
-    #decoded = decode.decode_pic_from_dre(pic,encoded_dre,QF)
-    #plt.imshow(decoded)
-    #plt.show()
 
-    # Compare encoded and then decoded block with the original block, using different QF ranging from 0.1-1.5
-    #for QF in [0.1,0.3,0.5,0.7,1,1.2,1.5]:compare_block(pic,0,0,QF)
-    # Compare encoded and then decoded full picture with the original picture, using different QF ranging from 0.1-1.5
-    #for QF in [0.1,0.3,0.5,0.7,1,1.2,1.5]:compare_pics(pic,QF)
+    # Make encoder table, show how to access the bits for a given run, level tuple that we want to encode:
+    table = make_encoder_table()
+    print("To encode (0,3):", table[(0,3)], "+ sign bit")
+    print("To encode EOB:", table['EOB'])
 
-    """
-    parser = argparse.ArgumentParser(description='EC504 proto-mpeg encoder for jpeg images')
-    parser.add_argument('--out', nargs=1, default=['output.bin'], help='filename of encoded file. default is output.bin')
-    parser.add_argument('--alg', nargs=1, choices=['n', 'fd', 'bm'], default=['n'], help='temporal compression algorithm. n=none; fd=frame difference; bm=block matching. Default is none.')
-    parser.add_argument('--qf', nargs=1, type=int, choices=[1, 2, 3, 4], default=[1], help='quantization factor for HF suppression. Default is 1. Higher values achieve higher compression.')
-    parser.add_argument('--limit', nargs=1, type=int, help='cap the number of images that will be encoded. Default is no limit (all files).')
-    parser.add_argument('input', nargs=argparse.REMAINDER, help='Either a single directory or a list of files to encode, separated by spaces.')
+    # Make decoder table, show how to access the run_level tuple for a 4-bit code of '0100'
+    table = make_decoder_table()
+    if Bits('0b000000000010000') in table: # it is
+        print("Found it:", table[Bits('0b000000000010000')])
+    if Bits('0b0000000000100001') not in table: # it's not
+        print("Code not in table.")
 
-    args = parser.parse_args()
 
-    # Print help if no arguments are given
-    if (len(sys.argv[1:])) == 0:
-        parser.print_help()
-        parser.exit()
-
-    # Handle output filename argument
-    outname = args.out[0]
-
-    # Handle source location (either a directory or a list of files)
-    if args.input == []:
-        # If not given any files for the input argument
-        print("No input files given. Use -h to see help.")
-        parser.exit()
-    else:
-        # try to read directory at input[0]. If this fails, assume we have a list of one or more files.
-        try:
-            filenames = sorted(listdir(args.input[0]))
-            # Listdir will work without a trailing '/', but the code that follows won't. Append it if it is missing.
-            if args.input[0][-1] != '/':
-                args.input[0] = args.input[0] + '/'
-            files = [args.input[0] + fname for fname in filenames]
-            if len(args.input) > 1:
-                print("Warning: additional parmeters for <input> that follow a directory are ignored. Use -h to see help.")
-        except NotADirectoryError:
-            files = args.input
-        finally:
-            files = [file for file in files if file.endswith('.jpg') or file.endswith('.jpeg')]
-            if len(files) == 0:
-                print("No jpeg files found.")
-                parser.exit()
-
-    # Handle limit on number of files
-    if args.limit != None and len(files) > args.limit[0]:
-        files = files[:args.limit[0]]
-
-    # Translate algorithm selection
-    if args.alg[0]=='n':
-        method='none'
-    elif args.alg[0]=='fd':
-        method='frame_difference'
-    elif args.alg[0]=='bm':
-        method='block_matching'
-
-    print("Encoding", len(files), "files into", outname, "with motion algorithm", method, "and QF =", args.qf[0])
-    proto_mpeg_x.encodeVideo(outname, files, mot_est=method, QF=args.qf[0])
-
-    # Calculate original file size
-    original_size_B = 0
-    for file in files:
-        original_size_B += path.getsize(file)
-
-    #Calculate compressed file size
-    compressed_size = path.getsize(outname)
-
-    print("Sum of input image sizes:", '%.2f' % (original_size_B/1e6), 'MB')
-    print("Compressed video size:", '%.2f' % (compressed_size/1e6), 'MB')
-    print("Compression ratio: %.3f" % (original_size_B/compressed_size))
-    """
 if __name__ == "__main__":
     main()

@@ -51,13 +51,17 @@ def main():
 		except NotADirectoryError:
 			fin = args.input
 	
+	# get QF from args list
+	QF = args.qf[0]
+	
 	# open output file
 	f = open(fout, "wb")
 	
-	# encode file header (number of images
+	# encode file header (number of images, etc)
+	
 	header = struct.pack(">I", len(fin))
 	f.write(header)
-	
+
 	print("Encoding...")
 	# call video encoder on inputs
 	for imfile in fin:
@@ -67,11 +71,9 @@ def main():
 		for vert in range(0,image.v_mblocks):
 			for hor in range(0,image.h_mblocks):
 				MB = image.getBlock(vert, hor)
-				encoded = image.encodeBlock(MB,QF) #output of this should be binary stream once Huffman Encoding implemented
+				encoded = image.encode_block(MB,QF) #output of this should be binary stream once Huffman Encoding implemented
 				#  write encoded to binary file
 				f.write(encoded)
-	
-	# encode EOF footer
 	
 	print("Encoding Complete")
 	# close output file

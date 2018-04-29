@@ -2,8 +2,8 @@ import argparse
 import sys
 import numpy as np
 import proto_mpeg
-import encode
-import decode
+import encoder
+import decoder
 import matplotlib.pyplot as plt
 import os
 import pickle
@@ -22,9 +22,9 @@ def main():
     img_list = ["./pics/sample_images/scene00%03d.jpg" % i for i in range(10)][1:]
     #print(img_list)
 
-    encode.encode_video(img_list,QF=QF,output="output.bin")
-    decode.decode_video(v,h,input="output.bin",QF=QF,output='decoded_movie.mp4')
-    
+    encoder.encode_video(img_list,QF=QF,output="output.bin")
+    decoder.decode_video(input="output.bin",output='decoded_movie.mp4')
+
     #fname = "./decoded_pics/output0001.jpg"
     #fullPic = plt.imread(fname)
     #print(fullPic.shape)

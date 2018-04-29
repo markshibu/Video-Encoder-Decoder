@@ -12,8 +12,8 @@ import math
 main = Tk()
 main.geometry('750x500')
 progBarVal = DoubleVar()
+fpsVal = 10
 QFValue = 0.1;
-
 
 #List Box that Implements Reorder by Dragging
 class myListbox(tkinter.Listbox):
@@ -61,11 +61,15 @@ def updateQF(value):
 	global QFValue
 	QFValue = value
 
+def updateFPS(value):
+	global fpsVal
+	fpsVal = value
+
 def encoding():
 	global QFValue
 	global progBarVal
 
-	i = 0
+	i = -2
 	progBarVal.set(0)
 
 	files = FileList.get(0,END)
@@ -84,8 +88,9 @@ def encoding():
 		fileName = "output.bin"
 	print(fileName)
 
-	proc = subprocess.Popen([sys.executable,'encode.py', '-output', fileName, '-qf', str(QFValue)] + list(files),stdout = subprocess.PIPE, bufsize = 1)
+	proc = subprocess.Popen([sys.executable, '-u','encode.py', '--output', fileName, '--qf', str(QFValue)] + list(files),stdout = subprocess.PIPE, bufsize = 1)
 	for newLine in iter(proc.stdout.readline, b''):
+		print(newLine.decode(sys.stdout.encoding), end='')
 		i+=1
 		progBarVal.set(i/numFiles*100)
 		main.update()
@@ -101,13 +106,31 @@ def encoding():
 
 
 def decoding():
+	global fpsVal
 	global progBarVal
+	
 	main.decodefile = filedialog.askopenfile(mode = 'rb', title = "Choose a File to Decode")
-	start = time.time()
-	print(main.decodefile.name)
-	totaltime = time.time() - start
+	if main.decodefile != None:
+		encodeButton.configure(state=tkinter.DISABLED)
+		decodeButton.configure(state=tkinter.DISABLED)
 
+		start = time.time()
+		
+		fileName = outputFile.get()
+		if fileName == "":
+			fileName = "decoded_movie.mp4"
+		print(fileName)
 
+		proc = subprocess.Popen([sys.executable, '-u', 'view.py', '--fps', fpsVal, '--output', fileName, main.decodefile.name], stdout=subprocess.PIPE,bufsize = 1)
+
+		print(str(fpsVal))
+		totaltime = time.time() - start
+
+		encodeButton.configure(state=tkinter.ACTIVE)
+		decodeButton.configure(state=tkinter.ACTIVE)
+
+		message = "Decoded "+ main.decodefile.name + " in " + str(round(totaltime,3)) +" seconds"
+		messagebox.showinfo("Decoding Complete",message)
 
 ###############
 #    FRAMES
@@ -120,6 +143,7 @@ encodeDecodeFrame = Frame(master = main)
 outputFrame = Frame(master = main)
 progressFrame = Frame(master = main)
 qualityFrame = Frame(master = main)
+fpsFrame = Frame(master = main)
 
 
 ###############
@@ -144,6 +168,7 @@ clearAllButton.pack(side = TOP)
 qualityLabel = Label(qualityFrame,justify='left', text = 'Quality Factor: ')
 qualityFactor = Scale(qualityFrame, variable = QFValue, orient = "horizontal", length = 250,\
 		from_ = 0.1, to = 1.5, resolution = 0.1, command = updateQF)
+qualityFactor.set(0.8)
 qualityLabel.pack(side = LEFT)
 qualityFactor.pack(side = LEFT)
 
@@ -161,6 +186,27 @@ decodeButton = Button(encodeDecodeFrame, text="Decode File", command = decoding)
 
 decodeButton.pack(side = RIGHT,padx = 10)
 encodeButton.pack(side = RIGHT,padx = 10)
+
+#FPS RADIO BUTTONS
+# fps5Button = Radiobutton(fpsFrame, text = "5", variable = fpsVal, value = 5)
+# fps10Button = Radiobutton(fpsFrame, text = "10", variable = fpsVal, value = 10)
+# fps15Button = Radiobutton(fpsFrame, text = "15", variable = fpsVal, value = 15)
+# fps20Button = Radiobutton(fpsFrame, text = "20", variable = fpsVal, value = 20)
+
+# fps5Button.pack(anchor = W)
+# fps10Button.pack(anchor = W)
+# fps15Button.pack(anchor = W)
+# fps20Button.pack(anchor = W)
+
+# fps10Button.select()
+
+fpsLabel = Label(fpsFrame,justify='left', text = 'FPS of Decoded Video: ')
+fpsFactor = Scale(fpsFrame, variable = fpsVal, orient = "horizontal", length = 150,\
+		from_ = 5, to = 20, resolution = 5, command = updateFPS)
+fpsFactor.set(10)
+fpsLabel.pack(side = LEFT)
+fpsFactor.pack(side = LEFT)
+
 
 #PROGRESS BAR FRAME
 progBarLabel = Label(progressFrame, justify='left', text='Progress')
@@ -181,7 +227,8 @@ fileFrame.pack(side = TOP, pady = 5)
 FileList.pack(side = LEFT)
 fileButtonFrame.pack(side = RIGHT)
 
-qualityFrame.pack(side = TOP, pady = 5)
+qualityFrame.pack(side = TOP)
+fpsFrame.pack(side = TOP)
 outputFrame.pack(side = TOP, pady = 5)
 encodeDecodeFrame.pack(side = TOP)
 progressFrame.pack(side = TOP, pady = 5)

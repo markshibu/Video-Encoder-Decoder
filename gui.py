@@ -10,7 +10,8 @@ import time
 import math
 
 main = Tk()
-main.geometry('750x500')
+main.geometry('850x500')
+main.resizable(0,0)
 progBarVal = DoubleVar()
 fpsVal = 10
 QFValue = 0.1;
@@ -187,19 +188,7 @@ decodeButton = Button(encodeDecodeFrame, text="Decode File", command = decoding)
 decodeButton.pack(side = RIGHT,padx = 10)
 encodeButton.pack(side = RIGHT,padx = 10)
 
-#FPS RADIO BUTTONS
-# fps5Button = Radiobutton(fpsFrame, text = "5", variable = fpsVal, value = 5)
-# fps10Button = Radiobutton(fpsFrame, text = "10", variable = fpsVal, value = 10)
-# fps15Button = Radiobutton(fpsFrame, text = "15", variable = fpsVal, value = 15)
-# fps20Button = Radiobutton(fpsFrame, text = "20", variable = fpsVal, value = 20)
-
-# fps5Button.pack(anchor = W)
-# fps10Button.pack(anchor = W)
-# fps15Button.pack(anchor = W)
-# fps20Button.pack(anchor = W)
-
-# fps10Button.select()
-
+#FPS SLIDER FRAME
 fpsLabel = Label(fpsFrame,justify='left', text = 'FPS of Decoded Video: ')
 fpsFactor = Scale(fpsFrame, variable = fpsVal, orient = "horizontal", length = 150,\
 		from_ = 5, to = 20, resolution = 5, command = updateFPS)

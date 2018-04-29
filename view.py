@@ -35,7 +35,7 @@ def main():
 		print("Additional input arugments detected... ignoring. Use -h to view help.")
 	
 	# Pass to decoder/viewer:
-	decode_video(fin)
+	decode_video(18,32,fin,0.8)
 	
 
 if __name__ == "__main__":

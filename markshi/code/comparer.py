@@ -1,8 +1,8 @@
 import sys
 import numpy as np
 import proto_mpeg
-import encode
-import decode
+import encoder
+import decoder
 import matplotlib.pyplot as plt
 import os
 import pickle

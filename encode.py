@@ -35,6 +35,10 @@ def main():
 	# Get specified output file name
 	fout = args.output[0]
 	
+	#if bin filename not sepcified, append bin extension
+	if not fout.lower().endswith(".bin"):
+		fout = fout + ".bin"
+	
 	# Get input
 	if args.input == []:
 		print("No input files detected... aborting. Use -h to view help.")

@@ -1,9 +1,13 @@
 import cv2
+import os
 import numpy as np
 import scipy.fftpack as fft
-from proto_mpeg import quantization_matrix,zz_indices,reversed_zz_indices
+from proto_mpeg import quantization_matrix,zz_indices,reversed_zz_indices,Frame
 import matplotlib.pyplot as plt
+import matplotlib
 import pickle
+from PIL import Image
+
 def decode_block(F,QF):
     def zigzag_to_flattened_block(encoded_string):
         """
@@ -78,25 +82,57 @@ def decode_block(F,QF):
     return regenerated_block
     
 # dre refers to DC_term,Run_level,EOB
-def decode_dre_to_pic(pic,blocks,QF):
+def decode_dre_to_pic(v,h,blocks,QF):
     decoded_blocks = []
     for block in blocks:
         decoded_block = decode_block(block,QF)
         decoded_blocks.append(decoded_block)
     f=[]
-    for m in range(pic.v_mblocks):
+    for m in range(v):
         rst = []
         for i in range(16):
-            for n in range(pic.h_mblocks):
-                block = decoded_blocks[m*pic.h_mblocks+n]
+            for n in range(h):
+                block = decoded_blocks[m*h+n]
                 rst+=list(block[i])
         #print(len(rst))
         f+=rst
     #print(len(f))
-    f = np.array(f).reshape(pic.v_mblocks*16,pic.h_mblocks*16,3)
+    f = np.array(f).reshape(v*16,h*16,3)
     return f
 
-def decode_bit_to_dre_1(bits):    
-    with open("test.bin", "rb") as fp:   # Unpickling
+def decode_bit_to_dre_1(input):    
+    with open(input, "rb") as fp:   # Unpickling
         decoded_dre = pickle.load(fp)
     return decoded_dre
+
+def decode_pic(v,h,input,QF,output="output.jpg"):
+    decoded_dre = decode_bit_to_dre_1(input)
+    #print(decoded_dre)    
+    decoded = decode_dre_to_pic(v,h,decoded_dre,QF)
+    #plt.imshow(decoded)
+    #plt.show()
+    matplotlib.image.imsave(output, decoded)
+
+from PIL import Image
+def pics_to_video(fname,fps,output):
+    os.system("ffmpeg -r "+str(fps)+" -i "+fname+" -vcodec mpeg4 -y "+output)
+
+def decode_video(v,h,input,QF,output="output.mp4"):
+    print("decoding start!")
+    imgs = decode_bit_to_dre_1(input)
+    fname = './pics/night.jpg'
+    fullPic = plt.imread(fname)
+    pic = Frame(fullPic)
+    i=1
+    for img in imgs:
+        print(i)
+        tmp = decode_dre_to_pic(v,h,img,QF=QF)
+        output = "./decoded_pics/output%04d.png" % i
+        print(tmp.shape)
+        plt.imsave(output, tmp, format='png')
+        t = plt.imread(output)
+        print(t.shape)
+        i+=1
+    print("decoding done!")
+    pics_to_video("./decoded_pics/output%04d.png", 5,'decoded_movie.mp4')
+    #pics_to_video("./pics/sample_images/scene00%03d.jpg", 24,'original_movie.mp4')

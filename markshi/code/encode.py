@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
 import scipy.fftpack as fft
-from proto_mpeg import quantization_matrix,zz_indices,reversed_zz_indices
+from proto_mpeg import quantization_matrix,zz_indices,reversed_zz_indices, Frame
+import matplotlib.pyplot as plt
 from huffman import EOF,make_encoder_table
 import pickle
 
@@ -163,6 +164,24 @@ def dre_to_bit(blocks):
         rst.append(translated_block)
     return rst
 
-def dre_to_bit_1(blocks):
-    with open("test.bin", "wb") as fp:   #Pickling
+def dre_to_bit_1(blocks,output):
+    with open(output, "wb") as fp:   #Pickling
         pickle.dump(blocks, fp)
+
+def encode_pic(input,QF,output="output.bin"):
+    fullPic = plt.imread(input)
+    pic = Frame(fullPic)
+    encoded_dre = encode_pic_to_dre(pic,QF)
+    dre_to_bit_1(encoded_dre,output)
+
+def encode_video(img_list,QF,output="output.bin"):
+    print("encoding start!")
+    rst = []
+    for img in img_list:
+        print("processing ",img)
+        fullPic = plt.imread(img)
+        pic = Frame(fullPic)
+        encoded_dre = encode_pic_to_dre(pic,QF)
+        rst.append(encoded_dre)
+    dre_to_bit_1(rst,output)
+    print("encoding done!")

@@ -10,25 +10,24 @@ import pickle
 import comparer
 
 def main():
-    img_name = 'night.jpg'
-    #fullPic = plt.imread(img_name)
-    #img_name = 'baboon.jpg'
-    fullPic = plt.imread('./pics/'+img_name)
+    fname = "./pics/sample_images/scene00001.jpg"
+    fullPic = plt.imread(fname)
     pic = proto_mpeg.Frame(fullPic)
+    v,h = pic.v_mblocks,pic.h_mblocks # 22,40
+
     QF=0.1
+    #encode.encode_pic(fname,QF=QF,output="output.bin")
+    #decode.decode_pic(v,h,input="output.bin",QF=QF,output="./decoded_pics/night.jpg")
 
-    #### Encode
-    encoded_dre = encode.encode_pic_to_dre(pic,QF) # dre refers to DC_term,Run_level,EOB
-    #print(encoded_dre)
-    bits = encode.dre_to_bit_1(encoded_dre)
+    img_list = ["./pics/sample_images/scene00%03d.jpg" % i for i in range(10)][1:]
+    #print(img_list)
 
-    #### Decode
-    decoded_dre = decode.decode_bit_to_dre_1(bits)
-    #print(decoded_dre)
-    decoded = decode.decode_dre_to_pic(pic,decoded_dre,QF)
-    #plt.imshow(decoded)
-    #plt.show()
-
+    encode.encode_video(img_list,QF=QF,output="output.bin")
+    decode.decode_video(v,h,input="output.bin",QF=QF)
+    
+    #fname = "./decoded_pics/output0001.jpg"
+    #fullPic = plt.imread(fname)
+    #print(fullPic.shape)
     #### Compare
     #comparer.compare_compress_rate('./pics/baboon.jpg')
     #for QF in [0.1,0.3,0.5,0.7,0.9,1.1,1.3,1.5]: comparer.compare_block(pic,0,0,QF)

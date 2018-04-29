@@ -13,6 +13,8 @@ import sys
 from os import listdir
 from imghdr import what
 from encoder import encode_video
+from proto_mpeg import Frame
+import cv2
 
 def main():
 	
@@ -66,6 +68,18 @@ def main():
 	
 	# pass to video encoder
 	encode_video(fin, QF, fout)
+	
+	# for testing purposes:
+	img = cv2.imread(fin[1])
+	frame = Frame(img)
+	h = frame.h_mblocks
+	v = frame.v_mblocks
+	print("QF")
+	print(QF)
+	print("h")
+	print(h)
+	print("v")
+	print(v)
 	
 if __name__ == "__main__":
 	main()

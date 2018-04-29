@@ -23,15 +23,17 @@ def main():
     #print(img_list)
 
     encode.encode_video(img_list,QF=QF,output="output.bin")
-    decode.decode_video(v,h,input="output.bin",QF=QF)
+    decode.decode_video(v,h,input="output.bin",QF=QF,output='decoded_movie.mp4')
     
     #fname = "./decoded_pics/output0001.jpg"
     #fullPic = plt.imread(fname)
     #print(fullPic.shape)
+
     #### Compare
     #comparer.compare_compress_rate('./pics/baboon.jpg')
     #for QF in [0.1,0.3,0.5,0.7,0.9,1.1,1.3,1.5]: comparer.compare_block(pic,0,0,QF)
     #for QF in [0.1,0.3,0.5,0.7,0.9,1.1,1.3,1.5]: comparer.compare_pics(pic,QF)
+
 
     """
     parser = argparse.ArgumentParser(description='EC504 proto-mpeg encoder for jpeg images')

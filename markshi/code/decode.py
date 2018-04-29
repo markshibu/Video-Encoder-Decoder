@@ -117,7 +117,7 @@ from PIL import Image
 def pics_to_video(fname,fps,output):
     os.system("ffmpeg -r "+str(fps)+" -i "+fname+" -vcodec mpeg4 -y "+output)
 
-def decode_video(v,h,input,QF,output="output.mp4"):
+def decode_video(v,h,input,QF,output='decoded_movie.mp4'):
     print("decoding start!")
     imgs = decode_bit_to_dre_1(input)
     fname = './pics/night.jpg'
@@ -127,12 +127,9 @@ def decode_video(v,h,input,QF,output="output.mp4"):
     for img in imgs:
         print(i)
         tmp = decode_dre_to_pic(v,h,img,QF=QF)
-        output = "./decoded_pics/output%04d.png" % i
-        print(tmp.shape)
-        plt.imsave(output, tmp, format='png')
-        t = plt.imread(output)
-        print(t.shape)
+        output1 = "./decoded_pics/output%04d.png" % i
+        plt.imsave(output1, tmp, format='png')
         i+=1
     print("decoding done!")
-    pics_to_video("./decoded_pics/output%04d.png", 5,'decoded_movie.mp4')
+    pics_to_video("./decoded_pics/output%04d.png", 5,output)
     #pics_to_video("./pics/sample_images/scene00%03d.jpg", 24,'original_movie.mp4')

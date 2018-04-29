@@ -124,6 +124,8 @@ def decode_video(input,fps=10,output='decoded_movie.mp4'):
     v = imgs.pop(0)
     h = imgs.pop(0)
     i=1
+    if not os.path.exists("./decoded_pics"):
+        os.makedirs("./decoded_pics")
     for img in imgs:
         print(i)
         tmp = decode_dre_to_pic(v,h,img,QF=QF)

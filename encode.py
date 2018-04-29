@@ -14,6 +14,7 @@ from os import listdir
 import proto_mpeg
 import cv2
 import struct
+from imghdr import what
 
 def main():
 	
@@ -53,6 +54,13 @@ def main():
 		except NotADirectoryError:
 			fin = args.input
 	
+	print(fin)
+	# check whether files are of an image type - assuming arbitrary image file type
+	for i in range(0,len(fin)):
+		if what(fin[i]) is None:
+			fin.pop(i)
+	
+	print(fin)
 	# get QF from args list
 	QF = args.qf[0]
 	

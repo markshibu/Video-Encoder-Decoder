@@ -10,7 +10,7 @@ import time
 import math
 
 main = Tk()
-main.geometry('850x500')
+main.geometry('700x500')
 main.resizable(0,0)
 progBarVal = DoubleVar()
 fpsVal = 10
@@ -110,6 +110,9 @@ def decoding():
 	global fpsVal
 	global progBarVal
 	
+	i = -3
+	numFrames = 0
+
 	main.decodefile = filedialog.askopenfile(mode = 'rb', title = "Choose a File to Decode")
 	if main.decodefile != None:
 		encodeButton.configure(state=tkinter.DISABLED)
@@ -123,14 +126,25 @@ def decoding():
 		print(fileName)
 
 		proc = subprocess.Popen([sys.executable, '-u', 'view.py', '--fps', fpsVal, '--output', fileName, main.decodefile.name], stdout=subprocess.PIPE,bufsize = 1)
+		for line in iter(proc.stdout.readline, b''):
+			message = line.decode(sys.stdout.encoding)
+			print(message, end='')
+			if message.startswith('Number of Frames: '):
+				numFrames = int(message[len('Number of Frames: '):])
+			if message.startswith('QF: '):
+				QF = float(message[len('QF: '):])
+			if i >= 0 and numFrames > 0:
+				progBarVal.set(i/numFrames * 100)
+				main.update()
+			i+=1
 
-		print(str(fpsVal))
+
 		totaltime = time.time() - start
 
 		encodeButton.configure(state=tkinter.ACTIVE)
 		decodeButton.configure(state=tkinter.ACTIVE)
 
-		message = "Decoded "+ main.decodefile.name + " in " + str(round(totaltime,3)) +" seconds"
+		message = "Decoded "+ main.decodefile.name + " in " + str(round(totaltime,3)) +" seconds with QF of " + str(QF)
 		messagebox.showinfo("Decoding Complete",message)
 
 ###############
@@ -152,7 +166,7 @@ fpsFrame = Frame(master = main)
 ###############
 
 #LIST BOX
-FileList = myListbox(fileFrame, width = 80, height = 15)#selectmode = SINGLE,
+FileList = myListbox(fileFrame, width = 70, height = 15)#selectmode = SINGLE,
 
 #ADD/REMOVE FILE BUTTONS
 fileLabel = Label(fileFrame,justify='left', text ='Selected Files For Encoding')
@@ -214,11 +228,11 @@ quitButton.pack(side = RIGHT)
 #FRAME POSITIONING
 fileFrame.pack(side = TOP, pady = 5)
 FileList.pack(side = LEFT)
-fileButtonFrame.pack(side = RIGHT)
+fileButtonFrame.pack(side = RIGHT, fill = "x")
 
-qualityFrame.pack(side = TOP)
-fpsFrame.pack(side = TOP)
-outputFrame.pack(side = TOP, pady = 5)
+qualityFrame.pack(side = TOP, fill = "x",padx = 10)
+fpsFrame.pack(side = TOP, fill = "x",padx = 10)
+outputFrame.pack(side = TOP, pady = 5, fill = "x",padx = 10)
 encodeDecodeFrame.pack(side = TOP)
 progressFrame.pack(side = TOP, pady = 5)
 quitFrame.pack(side = TOP)

@@ -11,10 +11,8 @@ to determine how to parse arguments, determine if directory inputed instead of i
 import argparse
 import sys
 from os import listdir
-import proto_mpeg
-import cv2
-import struct
 from imghdr import what
+from encoder import encode_video
 
 def main():
 	
@@ -66,30 +64,8 @@ def main():
 	# get QF from args list
 	QF = args.qf[0]
 	
-	# open output file
-	f = open(fout, "wb")
-	
-	# encode file header (number of images, etc)
-	
-	header = struct.pack(">I", len(fin))
-	f.write(header)
-
-	print("Encoding...")
-	# call video encoder on inputs
-	for imfile in fin:
-		image = proto_mpeg.Frame(cv2.imread(imfile))
-		# starting from top left corner, take each MB and encode
-		# will need to update to account for frame matching
-		for vert in range(0,image.v_mblocks):
-			for hor in range(0,image.h_mblocks):
-				MB = image.getBlock(vert, hor)
-				encoded = image.encode_block(MB,QF) #output of this should be binary stream once Huffman Encoding implemented
-				#  write encoded to binary file
-				f.write(encoded)
-	
-	print("Encoding Complete")
-	# close output file
-	f.close()
+	# pass to video encoder
+	encode_video(fin, QF, fout)
 	
 if __name__ == "__main__":
 	main()

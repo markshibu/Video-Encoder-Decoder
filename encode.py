@@ -4,6 +4,8 @@ Reuired Inputs - list of images (arbitrary number, assumed to be final inputs)
 optional inputs: output file (flagged with -output)
                  quantization factor (flagged with -qf, number between 0.1 and 1.5
 Written by Jonathan Chamberlain - jdchambo@bu.edu
+Referenced encoder project at https://github.com/appletonbrian/EC504-video-encoder
+to determine how to parse arguments, determine if directory inputed instead of individual files
 '''
 
 import argparse

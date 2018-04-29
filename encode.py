@@ -4,6 +4,8 @@ Reuired Inputs - list of images (arbitrary number, assumed to be final inputs)
 optional inputs: output file (flagged with -output)
                  quantization factor (flagged with -qf, number between 0.1 and 1.5
 Written by Jonathan Chamberlain - jdchambo@bu.edu
+Referenced encoder project at https://github.com/appletonbrian/EC504-video-encoder
+to determine how to parse arguments, determine if directory inputed instead of individual files
 '''
 
 import argparse
@@ -12,6 +14,7 @@ from os import listdir
 import proto_mpeg
 import cv2
 import struct
+from imghdr import what
 
 def main():
 	
@@ -20,7 +23,7 @@ def main():
 	parsed = argparse.ArgumentParser(description='Video encoder for jpeg images')
 	parsed.add_argument('-output', nargs=1, default=['out.bin'], help='filename of encoded file - default is out.bin')
 	parsed.add_argument('-qf', nargs=1, choices=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5], default=[0.8], help='quantization factor for high frquency supression. Default is 0.8')
-	parsed.add_argument('input', nargs=argparse.REMAINDER, help='Specify either a space delimited list of files, or a single directory')
+	parsed.add_argument('input', nargs=argparse.REMAINDER, help='Specify either a space delimited list of image files, or a single directory')
 	
 	args = parsed.parse_args()
 	
@@ -51,6 +54,15 @@ def main():
 		except NotADirectoryError:
 			fin = args.input
 	
+	# check whether files are of an image type - assuming arbitrary image file type
+	for i in range(0,len(fin)):
+		if what(fin[i]) is None:
+			fin.pop(i)
+	
+	if fin == []:
+		print("No image files detected... aborting. Use -h to view help.")
+		parsed.exit()
+		
 	# get QF from args list
 	QF = args.qf[0]
 	

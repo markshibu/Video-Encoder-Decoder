@@ -6,6 +6,7 @@ import encode
 import decode
 import matplotlib.pyplot as plt
 import os
+import pickle
 
 #Only for test
 def compare_block(pic,m,n,QF):
@@ -69,23 +70,26 @@ def compare_compress_rate(pic):
         
         print('QF = ',QF,', original size = ',ori_size, ', bitstream length = ',len(bits))
 
+
 def main():
-    #img_name = 'night.jpg'
+    img_name = 'night.jpg'
     #fullPic = plt.imread(img_name)
     #img_name = 'baboon.jpg'
-    fullPic = plt.imread('./pics/baboon.jpg')[:32,:64]
+    fullPic = plt.imread('./pics/'+img_name)
     pic = proto_mpeg.Frame(fullPic)
+    QF=0.1
 
     # Encode
-    QF=0.1
     encoded_dre = encode.encode_pic_to_dre(pic,QF) # dre refers to DC_term,Run_level,EOB
-    bits = encode.dre_to_bit(encoded_dre)
+    #print(encoded_dre)
+    bits = encode.dre_to_bit_1(encoded_dre)
 
     # Decode
-    #print(len(encoded_dre))
-    #decoded = decode.decode_pic_from_dre(pic,encoded_dre,QF)
-    #plt.imshow(decoded)
-    #plt.show()
+    decoded_dre = decode.decode_bit_to_dre_1(bits)
+    #print(decoded_dre)
+    decoded = decode.decode_dre_to_pic(pic,decoded_dre,QF)
+    plt.imshow(decoded)
+    plt.show()
 
     # Compare
     #compare_compress_rate(pic)

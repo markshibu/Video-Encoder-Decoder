@@ -3,7 +3,7 @@ import numpy as np
 import scipy.fftpack as fft
 from proto_mpeg import quantization_matrix,zz_indices,reversed_zz_indices
 import matplotlib.pyplot as plt
-
+import pickle
 def decode_block(F,QF):
     def zigzag_to_flattened_block(encoded_string):
         """
@@ -78,7 +78,7 @@ def decode_block(F,QF):
     return regenerated_block
     
 # dre refers to DC_term,Run_level,EOB
-def decode_pic_from_dre(pic,blocks,QF):
+def decode_dre_to_pic(pic,blocks,QF):
     decoded_blocks = []
     for block in blocks:
         decoded_block = decode_block(block,QF)
@@ -95,3 +95,8 @@ def decode_pic_from_dre(pic,blocks,QF):
     #print(len(f))
     f = np.array(f).reshape(pic.v_mblocks*16,pic.h_mblocks*16,3)
     return f
+
+def decode_bit_to_dre_1(bits):    
+    with open("test.bin", "rb") as fp:   # Unpickling
+        decoded_dre = pickle.load(fp)
+    return decoded_dre

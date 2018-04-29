@@ -3,6 +3,8 @@ import numpy as np
 import scipy.fftpack as fft
 from proto_mpeg import quantization_matrix,zz_indices,reversed_zz_indices
 from huffman import EOF,make_encoder_table
+import pickle
+
 def encode_block(src,QF):
     """
     @param src: A 16*16*3 block
@@ -105,6 +107,7 @@ def encode_pic_to_dre(pic,QF):
             blocks.append(encoded_block)
     return blocks
 
+
 from bitstring import BitArray, BitStream, Bits, ReadError
 def dre_to_bit(blocks):
     encoder_table = make_encoder_table()
@@ -160,74 +163,6 @@ def dre_to_bit(blocks):
         rst.append(translated_block)
     return rst
 
-def zigzag_to_bits(self, encoder_table, zz):
-
-    # Encode the DC term into a BitArray
-    encoded_bits = BitArray(zz[0])
-
-    # Encode the AC terms
-    for i in range(1, len(zz) - 1):
-        run_level = zz[i]
-        run_level_positive = tuple(map(abs, run_level))
-
-        if run_level_positive in encoder_table:
-            # Note only positive levels are stored in encoder table.
-            encoded_bits.append(encoder_table[run_level_positive])
-            # Check to see if the level is negative, write appropriate sign bit.
-            if run_level[1] < 0:
-                # Level is negative, so we will write a sign bit of 1
-                encoded_bits.append('0b1')
-            else:
-                # Level is positive, so we will write a sign bit of 0
-                encoded_bits.append('0b0')
-        else:
-            # The run_level combo was not fond in the encoder table. We will do the following:
-            # i) encode an escape character
-            # ii) encode a 6-bit unsigned integer for the run, which is at most 62
-            # iii) encode a 16-bit signed integer for the level
-            encoded_bits.append(encoder_table['ESC'])
-            run = 'uint:6=' + str(run_level[0])
-            level = 'int:16=' + str(run_level[1])
-            encoded_bits.append(run)
-            encoded_bits.append(level)
-
-    # Encode the EOB term
-    encoded_bits.append(encoder_table['EOB'])
-
-def encode_to_bits(self):
-    """
-    Encode the stored image data into a bitstream. 
-    The calling function is responsible for writing start and
-    end codes to the file to delineate different frames.
-    :return: BitArray representation
-    """
-    img_blocks = self.image_to_blocks()
-    total_blocks = np.shape(img_blocks)[0]
-    #print("Beginning encoding for", total_blocks, "blocks.")
-
-    # Get the encoder table for converting (run, level) codes into bits
-    encoder_table = huffman_mpeg.make_encoder_table()
-
-    # Create a BitArray that will hold all encoded bits
-    output = BitArray()
-
-    # Counter and checkpoints used to provide % complete
-    i = 0
-    #checkpoints = set(np.rint(np.linspace(0, total_blocks, 11, endpoint=True)))
-
-    for block in img_blocks:
-
-        # First, we create a zig-zag summary for the block after DCT and quantization
-        zz = self.zigzag_from_block(self.quantize_intra(dct.dct(block)))
-
-        # Then, we convert that zig-zag summary into a stream of bits
-        output.append(self.zigzag_to_bits(encoder_table, zz))
-
-        i = i + 1
-
-    return output
-
-
-
-
-
+def dre_to_bit_1(blocks):
+    with open("test.bin", "wb") as fp:   #Pickling
+        pickle.dump(blocks, fp)

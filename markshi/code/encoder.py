@@ -178,11 +178,13 @@ def encode_video(img_list,QF,output="output.bin"):
     print("encoding start!")
     first_img = img_list[0]
     fullPic = plt.imread(first_img)
+    headtag = 'EC504'
+    numimg = len(img_list)
     pic = Frame(fullPic)
     v = pic.v_mblocks
     h = pic.h_mblocks
 
-    rst = [QF,v,h]
+    rst = [headtag, numimg, QF,v,h]
     for img in img_list:
         print("processing ",img)
         fullPic = plt.imread(img)

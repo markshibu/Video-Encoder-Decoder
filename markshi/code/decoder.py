@@ -118,16 +118,24 @@ def pics_to_video(fname,fps,output):
     os.system("ffmpeg -r "+str(fps)+" -i "+fname+" -vcodec mpeg4 -y "+output)
 
 def decode_video(input,fps=10,output='decoded_movie.mp4'):
-    print("decoding start!")
+   
     imgs = decode_bit_to_dre_1(input)
+    headtag = imgs.pop(0)
+    if not headtag == 'EC504':
+        print("invalid binary file - must use a file encoded using this project... aborting")
+        return None
+    numimg = imgs.pop(0)
     QF = imgs.pop(0)
     v = imgs.pop(0)
     h = imgs.pop(0)
+    print("Number of Frames: "+str(numimg))
+    print("QF: "+str(QF))
+    print("decoding start!")
     i=1
     if not os.path.exists("./decoded_pics"):
         os.makedirs("./decoded_pics")
     for img in imgs:
-        print(i)
+        print("processing img",i)
         tmp = decode_dre_to_pic(v,h,img,QF=QF)
         output1 = "./decoded_pics/output%04d.png" % i
         plt.imsave(output1, tmp, format='png')

@@ -1,6 +1,6 @@
 import proto_mpeg
-import encode
-import decode
+import encoder
+import decoder
 import os
 import time
 import matplotlib.pyplot as plt
@@ -15,19 +15,21 @@ def analyze(QF,n):
         print("processing ",img_name)
         fullPic = plt.imread(img_name)
         pic = proto_mpeg.Frame(fullPic)
+        v=pic.v_mblocks
+        h=pic.h_mblocks
         
         # Encode
         start = time.time()
-        encoded_dre = encode.encode_pic_to_dre(pic,QF) # dre refers to DC_term,Run_level,EOB
+        encoded_dre = encoder.encode_pic_to_dre(pic,QF) # dre refers to DC_term,Run_level,EOB
         #print(encoded_dre)
-        bits = encode.dre_to_bit_1(encoded_dre)
+        bits = encoder.dre_to_bit_1(encoded_dre,'out.bin')
         encode_time += time.time()-start
         
         # Decode
         start = time.time()
-        decoded_dre = decode.decode_bit_to_dre_1(bits)
+        decoded_dre = decoder.decode_bit_to_dre_1('out.bin')
         #print(decoded_dre)
-        decoded = decode.decode_dre_to_pic(pic,decoded_dre,QF)
+        decoded = decoder.decode_dre_to_pic(v,h,decoded_dre,QF)
         decode_time += time.time()-start
 
     print("QF = ",QF)
@@ -36,12 +38,11 @@ def analyze(QF,n):
     print("average decode time: ",decode_time/n)
 
 
-def pics_to_video(fname,output):
-    os.system("ffmpeg -r 24 -i "+fname+" -vcodec mpeg4 -y "+output+".mp4")
+
 
 def main():
-    #pics_to_video('./pics/sample_images/scene00%03d.jpg', 'original_movie')
-    analyze(QF=1, n=3)
+    for QF in [0.1,0.5,1.0,1.5]:
+        analyze(QF=QF, n=3)
     
 if __name__ == "__main__":
     main()

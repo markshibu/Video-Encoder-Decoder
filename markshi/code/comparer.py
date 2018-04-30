@@ -66,7 +66,7 @@ def compare_compress_rate(fname):
         bits = encoder.dre_to_bit(encoded_dre)
         
         print('QF = ',QF,', original size = ',ori_size, ', bitstream length = ',
-                len(bits), ', compress rate = ',str(len(bits)*100/ori_size)[:4]+"%")
+                len(bits), ', compression rate = ',str(len(bits)*100/ori_size)[:4]+"%")
 def main():
     fname = "./pics/sample_images/scene00001.jpg"
     fullPic = plt.imread(fname)

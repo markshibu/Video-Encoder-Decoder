@@ -13,6 +13,8 @@ def main():
 
 	# get file input
 	parsed = argparse.ArgumentParser(description='Decoder and viewer for compressed binary video files')
+	parsed.add_argument('--fps', nargs=1, choices=['5','10','15','20'], default=['10'], help = 'Specify frames per second of video. Default is 10')
+	parsed.add_argument('--output',nargs=1, default='decoded_movie.mp4', help='Specify mp4 filename for video. Default is decoded_movie.mp4')
 	parsed.add_argument('input', nargs=argparse.REMAINDER, help='Specify a binary file containing a compressed video file')
 
 	# get args
@@ -27,15 +29,25 @@ def main():
 	# check that is a binary file
 	fin = args.input[0]
 	if not fin.lower().endswith('.bin'):
-		print("No binary file specified as first argument... aborting. Use -h to view help.")
+		print("No binary file specified as input argument... aborting. Use -h to view help.")
 		parsed.exit()
 	
 	# if multiple inputs detected, ignore
 	if len(args.input) > 1:
 		print("Additional input arugments detected... ignoring. Use -h to view help.")
 	
+	# get fps
+	FPS = int(args.fps[0])
+	
+	# get output file name
+	fout = args.output[0]
+	
+	#if mp4 filename not sepcified, append mp4 extension
+	if not fout.lower().endswith(".mp4"):
+		fout = fout + ".mp4"
+	
 	# Pass to decoder/viewer:
-	decode_video(fin)
+	decode_video(fin,FPS,fout)
 	
 
 if __name__ == "__main__":

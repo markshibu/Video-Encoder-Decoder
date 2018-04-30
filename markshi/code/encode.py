@@ -12,6 +12,8 @@ import argparse
 import sys
 from os import listdir
 from imghdr import what
+#from encoder import encode_pic_to_dre, dre_to_bit_1
+#from proto_mpeg import Frame
 from encoder import encode_video
 
 def main():
@@ -19,8 +21,8 @@ def main():
 	# get arguments, use argparse package to separate output, qf parameters and specify defaults
 	
 	parsed = argparse.ArgumentParser(description='Video encoder for jpeg images')
-	parsed.add_argument('-output', nargs=1, default=['out.bin'], help='filename of encoded file - default is out.bin')
-	parsed.add_argument('-qf', nargs=1, choices=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5], default=[0.8], help='quantization factor for high frquency supression. Default is 0.8')
+	parsed.add_argument('--output', nargs=1, default=['out.bin'], help='filename of encoded file - default is out.bin')
+	parsed.add_argument('--qf', nargs=1, choices=['0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1.0', '1.1', '1.2', '1.3', '1.4', '1.5'], default=['0.8'], help='quantization factor for high frquency supression. Default is 0.8')
 	parsed.add_argument('input', nargs=argparse.REMAINDER, help='Specify either a space delimited list of image files, or a single directory')
 	
 	args = parsed.parse_args()
@@ -32,6 +34,10 @@ def main():
 		
 	# Get specified output file name
 	fout = args.output[0]
+	
+	#if bin filename not sepcified, append bin extension
+	if not fout.lower().endswith(".bin"):
+		fout = fout + ".bin"
 	
 	# Get input
 	if args.input == []:
@@ -62,7 +68,7 @@ def main():
 		parsed.exit()
 		
 	# get QF from args list
-	QF = args.qf[0]
+	QF = float(args.qf[0])
 	
 	# pass to video encoder
 	encode_video(fin, QF, fout)

@@ -54,8 +54,8 @@ def blkmatch(frame1, frame2, blksize=16, scpsize=7):
     error = wrappedfm1 - frame2.getFrame()
     return frame1_mot, error, wrappedfm1
 
-image1 = plt.imread('scene00001.jpg')
-image2 = plt.imread('scene00002.jpg')
+image1 = plt.imread('/pics/sample_images/scene00001.jpg')
+image2 = plt.imread('/pics/sample_images/scene00002.jpg')
 print(image1.shape)
 print(image2.shape)
 fr1 = proto_mpeg.Frame(image1)
